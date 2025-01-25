@@ -34,6 +34,13 @@ public class Penyewaan extends javax.swing.JFrame {
                 new MainMenu().setVisible(true);
             }
         });
+
+        // Add document listener to search field
+        cariField.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+            public void changedUpdate(javax.swing.event.DocumentEvent e) { searchIfEmpty(); }
+            public void removeUpdate(javax.swing.event.DocumentEvent e) { searchIfEmpty(); }
+            public void insertUpdate(javax.swing.event.DocumentEvent e) { searchIfEmpty(); }
+        });
     }
 
     /**
@@ -69,6 +76,7 @@ public class Penyewaan extends javax.swing.JFrame {
         jTable2 = new javax.swing.JTable();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setTitle("Penyewaan");
         getContentPane().setLayout(new java.awt.GridLayout(0, 1));
 
         Input.setBorder(javax.swing.BorderFactory.createTitledBorder(""));
@@ -356,7 +364,7 @@ private void tambahBtnActionPerformed(java.awt.event.ActionEvent evt) {
     } catch (SQLException e) {
         ValidationUtils.showError(this, "Error: " + e.getMessage());
     }
-}//GEN-LAST:event_tambahBtnActionPerformed
+}                                         
 
 private void ubahBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ubahBtnActionPerformed
     int row = jTable2.getSelectedRow();
@@ -448,38 +456,55 @@ private void hapusBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRS
     }
 }//GEN-LAST:event_hapusBtnActionPerformed
 
-    private void cariBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cariBtnActionPerformed
-        String keyword = cariField.getText();
-        tableModel.setRowCount(0);
-        try {
-            String sql = "SELECT p.*, pl.nama as nama_pelanggan, k.model as model_pc " +
-                        "FROM penyewaan p " +
-                        "JOIN pelanggan pl ON p.id_pelanggan = pl.id_pelanggan " +
-                        "JOIN komputer k ON p.id_pc = k.id_pc " +
-                        "WHERE pl.nama LIKE ? OR k.model LIKE ?";
-            PreparedStatement ps = conn.prepareStatement(sql);
-            ps.setString(1, "%" + keyword + "%");
-            ps.setString(2, "%" + keyword + "%");
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                Object[] row = {
-                    rs.getInt("id_penyewaan"),
-                    rs.getString("nama_pelanggan"),
-                    rs.getString("model_pc"),
-                    rs.getDate("tanggal_sewa"),
-                    rs.getDate("tanggal_kembali"),
-                    rs.getDouble("total_biaya")
-                };
-                tableModel.addRow(row);
-            }
-        } catch (SQLException e) {
-            System.out.println("Error searching data: " + e.getMessage());
-        }
-    }//GEN-LAST:event_cariBtnActionPerformed
+private void cariBtnActionPerformed(java.awt.event.ActionEvent evt) {
+    String keyword = cariField.getText().trim();
+    
+    // Show warning if search field is empty
+    if (keyword.isEmpty()) {
+        ValidationUtils.showError(this, "Masukkan kata kunci pencarian!");
+        return;
+    }
 
-    private void cetakBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cetakBtnActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_cetakBtnActionPerformed
+    tableModel.setRowCount(0);
+    try {
+        String sql = "SELECT p.*, pl.nama as nama_pelanggan, k.model as model_pc " +
+                    "FROM penyewaan p " +
+                    "JOIN pelanggan pl ON p.id_pelanggan = pl.id_pelanggan " +
+                    "JOIN komputer k ON p.id_pc = k.id_pc " +
+                    "WHERE pl.nama LIKE ? OR k.model LIKE ?";
+        PreparedStatement ps = conn.prepareStatement(sql);
+        ps.setString(1, "%" + keyword + "%");
+        ps.setString(2, "%" + keyword + "%");
+        ResultSet rs = ps.executeQuery();
+        
+        boolean found = false;
+        while (rs.next()) {
+            found = true;
+            Object[] row = {
+                rs.getInt("id_penyewaan"),
+                rs.getString("nama_pelanggan"),
+                rs.getString("model_pc"),
+                rs.getDate("tanggal_sewa"),
+                rs.getDate("tanggal_kembali"),
+                rs.getDouble("total_biaya")
+            };
+            tableModel.addRow(row);
+        }
+        
+        if (!found) {
+            ValidationUtils.showError(this, "Data tidak ditemukan");
+            loadData(); // Reload all data if no results found
+        }
+    } catch (SQLException e) {
+        ValidationUtils.showError(this, "Error mencari data: " + e.getMessage());
+        loadData(); // Reload all data on error
+    }
+}
+
+private void cetakBtnActionPerformed(java.awt.event.ActionEvent evt) {
+    String filename = "Laporan_Penyewaan_" + System.currentTimeMillis() + ".pdf";
+    PDFGenerator.generatePDF("Laporan Data Penyewaan", filename, jTable2);
+}
 
 private void jTable2MouseClicked(java.awt.event.MouseEvent evt) {
     int row = jTable2.getSelectedRow();
@@ -639,6 +664,12 @@ private int lastSelectedRow = -1;
         hapusBtn.setEnabled(hapusEnabled);
     }
 
+    private void searchIfEmpty() {
+        if (cariField.getText().trim().isEmpty()) {
+            loadData();
+        }
+    }
+
     private class ComboItem {
         private int id;
         private String description;
@@ -673,8 +704,8 @@ private int lastSelectedRow = -1;
     private javax.swing.JLabel jLabel9;
     private javax.swing.JScrollPane jScrollPane4;
     private javax.swing.JTable jTable2;
-    private javax.swing.JComboBox<Penyewaan.ComboItem> komputer;
-    private javax.swing.JComboBox<Penyewaan.ComboItem> pelanggan;
+    private javax.swing.JComboBox<ComboItem> komputer;
+    private javax.swing.JComboBox<ComboItem> pelanggan;
     private javax.swing.JButton tambahBtn;
     private com.toedter.calendar.JDateChooser tglKemabali;
     private com.toedter.calendar.JDateChooser tglSewa;

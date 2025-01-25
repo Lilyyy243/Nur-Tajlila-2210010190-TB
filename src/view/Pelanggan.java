@@ -34,6 +34,13 @@ public class Pelanggan extends javax.swing.JFrame {
                 new MainMenu().setVisible(true);
             }
         });
+
+        // Add document listener to search field
+        cariField.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+            public void changedUpdate(javax.swing.event.DocumentEvent e) { searchIfEmpty(); }
+            public void removeUpdate(javax.swing.event.DocumentEvent e) { searchIfEmpty(); }
+            public void insertUpdate(javax.swing.event.DocumentEvent e) { searchIfEmpty(); }
+        });
     }
 
     private void setupTable() {
@@ -101,6 +108,7 @@ public class Pelanggan extends javax.swing.JFrame {
         jTable2 = new javax.swing.JTable();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setTitle("Pelanggan");
         getContentPane().setLayout(new java.awt.GridLayout(0, 1));
 
         input.setBorder(javax.swing.BorderFactory.createTitledBorder(""));
@@ -386,7 +394,14 @@ public class Pelanggan extends javax.swing.JFrame {
     }//GEN-LAST:event_tambahBtnActionPerformed
 
     private void cariBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cariBtnActionPerformed
-        String keyword = cariField.getText();
+        String keyword = cariField.getText().trim();
+        
+        // Show warning if search field is empty
+        if (keyword.isEmpty()) {
+            ValidationUtils.showError(this, "Masukkan kata kunci pencarian!");
+            return;
+        }
+
         tableModel.setRowCount(0);
         try {
             String sql = "SELECT * FROM pelanggan WHERE nama LIKE ? OR telepon LIKE ? OR alamat LIKE ?";
@@ -396,7 +411,10 @@ public class Pelanggan extends javax.swing.JFrame {
             ps.setString(2, pattern);
             ps.setString(3, pattern);
             ResultSet rs = ps.executeQuery();
+            
+            boolean found = false;
             while (rs.next()) {
+                found = true;
                 Object[] row = {
                     rs.getInt("id_pelanggan"),
                     rs.getString("nama"),
@@ -405,13 +423,20 @@ public class Pelanggan extends javax.swing.JFrame {
                 };
                 tableModel.addRow(row);
             }
+            
+            if (!found) {
+                ValidationUtils.showError(this, "Data tidak ditemukan");
+                loadData(); // Reload all data if no results found
+            }
         } catch (SQLException e) {
-            System.out.println("Error searching data: " + e.getMessage());
+            ValidationUtils.showError(this, "Error mencari data: " + e.getMessage());
+            loadData(); // Reload all data on error
         }
     }//GEN-LAST:event_cariBtnActionPerformed
 
     private void cetakBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cetakBtnActionPerformed
-        // TODO add your handling code here:
+    String filename = "Laporan_Pelanggan_" + System.currentTimeMillis() + ".pdf";
+    PDFGenerator.generatePDF("Laporan Data Pelanggan", filename, jTable2);
     }//GEN-LAST:event_cetakBtnActionPerformed
 
     private void jTable2MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTable2MouseClicked
@@ -438,6 +463,12 @@ public class Pelanggan extends javax.swing.JFrame {
         telp.setText("");
         jTextArea1.setText("");
         setButtonStates(true, false, false);
+    }
+
+    private void searchIfEmpty() {
+        if (cariField.getText().trim().isEmpty()) {
+            loadData();
+        }
     }
 
     /**

@@ -57,6 +57,7 @@ public class MainMenu extends javax.swing.JFrame {
         jLabel2 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
+        setTitle("Main Menu");
         setBackground(new java.awt.Color(255, 204, 204));
         setResizable(false);
 
