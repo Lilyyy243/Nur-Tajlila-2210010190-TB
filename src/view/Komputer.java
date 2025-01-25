@@ -7,11 +7,13 @@ package view;
 import database.Koneksi;
 import java.sql.*;
 import javax.swing.table.DefaultTableModel;
+import utils.*;
 
 public class Komputer extends javax.swing.JFrame {
 
     private Connection conn;
     private DefaultTableModel tableModel;
+    private int lastSelectedRow = -1;
 
     /**
      * Creates new form Komputer
@@ -24,6 +26,7 @@ public class Komputer extends javax.swing.JFrame {
         conn = Koneksi.getConnection();
         setupTable();
         loadData();
+        setButtonStates(true, false, false);
         
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         addWindowListener(new java.awt.event.WindowAdapter() {
@@ -35,9 +38,13 @@ public class Komputer extends javax.swing.JFrame {
     }
 
     private void setupTable() {
-        String[] columns = {"Model", "Spesifikasi"};
+        String[] columns = {"ID", "Model", "Spesifikasi"};
         tableModel = new DefaultTableModel(columns, 0);
         jTable2.setModel(tableModel);
+        // Hide ID column
+        jTable2.getColumnModel().getColumn(0).setMinWidth(0);
+        jTable2.getColumnModel().getColumn(0).setMaxWidth(0);
+        jTable2.getColumnModel().getColumn(0).setWidth(0);
     }
 
     private void loadData() {
@@ -46,18 +53,22 @@ public class Komputer extends javax.swing.JFrame {
             Statement st = conn.createStatement();
             ResultSet rs = st.executeQuery("SELECT * FROM komputer");
             while (rs.next()) {
-                int id = rs.getInt("id_pc"); // Store ID but don't display it
                 Object[] row = {
+                    rs.getInt("id_pc"),
                     rs.getString("model"),
                     rs.getString("spesifikasi")
                 };
                 tableModel.addRow(row);
-                // Store ID in table's row properties for later use
-                jTable2.setValueAt(id, tableModel.getRowCount() - 1, 0);
             }
         } catch (SQLException e) {
             System.out.println("Error loading data: " + e.getMessage());
         }
+    }
+
+    private void setButtonStates(boolean tambahEnabled, boolean ubahEnabled, boolean hapusEnabled) {
+        btnTambah3.setEnabled(tambahEnabled);
+        btnUbah1.setEnabled(ubahEnabled);
+        btnHapus1.setEnabled(hapusEnabled);
     }
 
     /**
@@ -264,26 +275,48 @@ public class Komputer extends javax.swing.JFrame {
 
     private void btnUbah1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUbah1ActionPerformed
         int row = jTable2.getSelectedRow();
-        if (row >= 0) {
-            try {
-                int id = (int) jTable2.getValueAt(row, 0);
-                String sql = "UPDATE komputer SET model=?, spesifikasi=? WHERE id_pc=?";
-                PreparedStatement ps = conn.prepareStatement(sql);
-                ps.setString(1, model.getText());
-                ps.setString(2, jTextArea1.getText());
-                ps.setInt(3, id);
-                ps.executeUpdate();
-                loadData();
-                clearForm();
-            } catch (SQLException e) {
-                System.out.println("Error updating data: " + e.getMessage());
-            }
+        if (row < 0) {
+            ValidationUtils.showError(this, "Pilih data yang akan diubah!");
+            return;
+        }
+
+        if (ValidationUtils.isEmptyField(model) || ValidationUtils.isEmptyField(jTextArea1)) {
+            ValidationUtils.showError(this, "Model dan spesifikasi komputer harus diisi!");
+            return;
+        }
+
+        try {
+            int id = (int) jTable2.getValueAt(row, 0);
+            String sql = "UPDATE komputer SET model=?, spesifikasi=? WHERE id_pc=?";
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setString(1, model.getText());
+            ps.setString(2, jTextArea1.getText());
+            ps.setInt(3, id);
+            ps.executeUpdate();
+            loadData();
+            clearForm();
+            setButtonStates(true, false, false);
+            ValidationUtils.showSuccess(this, "Data komputer berhasil diubah");
+        } catch (SQLException e) {
+            ValidationUtils.showError(this, "Error: " + e.getMessage());
         }
     }//GEN-LAST:event_btnUbah1ActionPerformed
 
     private void btnHapus1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnHapus1ActionPerformed
         int row = jTable2.getSelectedRow();
-        if (row >= 0) {
+        if (row < 0) {
+            ValidationUtils.showError(this, "Pilih data yang akan dihapus!");
+            return;
+        }
+
+        int confirm = javax.swing.JOptionPane.showConfirmDialog(
+            this,
+            "Apakah Anda yakin ingin menghapus data ini?",
+            "Konfirmasi Hapus",
+            javax.swing.JOptionPane.YES_NO_OPTION
+        );
+        
+        if (confirm == javax.swing.JOptionPane.YES_OPTION) {
             try {
                 int id = (int) jTable2.getValueAt(row, 0);
                 String sql = "DELETE FROM komputer WHERE id_pc=?";
@@ -292,23 +325,33 @@ public class Komputer extends javax.swing.JFrame {
                 ps.executeUpdate();
                 loadData();
                 clearForm();
+                setButtonStates(true, false, false);
+                ValidationUtils.showSuccess(this, "Data komputer berhasil dihapus");
             } catch (SQLException e) {
-                System.out.println("Error deleting data: " + e.getMessage());
+                ValidationUtils.showError(this, "Error: " + e.getMessage());
             }
         }
     }//GEN-LAST:event_btnHapus1ActionPerformed
 
     private void btnTambah3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTambah3ActionPerformed
+        // Validate inputs
+        if (ValidationUtils.isEmptyField(model) || ValidationUtils.isEmptyField(jTextArea1)) {
+            ValidationUtils.showError(this, "Model dan spesifikasi komputer harus diisi!");
+            return;
+        }
+        
         try {
             String sql = "INSERT INTO komputer (model, spesifikasi) VALUES (?, ?)";
             PreparedStatement ps = conn.prepareStatement(sql);
-            ps.setString(1, model.getText());
-            ps.setString(2, jTextArea1.getText());
+            ps.setString(1, model.getText().trim());
+            ps.setString(2, jTextArea1.getText().trim());
             ps.executeUpdate();
             loadData();
             clearForm();
+            setButtonStates(true, false, false);
+            ValidationUtils.showSuccess(this, "Data komputer berhasil ditambahkan");
         } catch (SQLException e) {
-            System.out.println("Error inserting data: " + e.getMessage());
+            ValidationUtils.showError(this, "Error: " + e.getMessage());
         }
     }//GEN-LAST:event_btnTambah3ActionPerformed
 
@@ -341,6 +384,16 @@ public class Komputer extends javax.swing.JFrame {
     private void jTable2MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTable2MouseClicked
         int row = jTable2.getSelectedRow();
         if (row >= 0) {
+            int currentRow = jTable2.getSelectedRow();
+            // If clicking the same row twice, clear the form
+            if (currentRow == lastSelectedRow) {
+                clearForm();
+                lastSelectedRow = -1; // Reset last selected row
+                return;
+            }
+            lastSelectedRow = currentRow; // Update last selected row
+            
+            setButtonStates(false, true, true);
             model.setText(jTable2.getValueAt(row, 1).toString());
             jTextArea1.setText(jTable2.getValueAt(row, 2).toString());
         }
@@ -349,6 +402,7 @@ public class Komputer extends javax.swing.JFrame {
     private void clearForm() {
         model.setText("");
         jTextArea1.setText("");
+        setButtonStates(true, false, false);
     }
 
     /**

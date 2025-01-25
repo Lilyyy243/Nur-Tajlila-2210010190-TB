@@ -7,8 +7,7 @@ package view;
 import database.Koneksi;
 import java.sql.*;
 import javax.swing.table.DefaultTableModel;
-import java.util.Date;
-import java.text.SimpleDateFormat;
+import utils.*;
 
 public class Penyewaan extends javax.swing.JFrame {
 
@@ -26,6 +25,7 @@ public class Penyewaan extends javax.swing.JFrame {
         setupTable();
         loadData();
         loadComboBoxes();
+        setButtonStates(true, false, false); // Initially enable only tambah button
         
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         addWindowListener(new java.awt.event.WindowAdapter() {
@@ -284,51 +284,30 @@ public class Penyewaan extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void ubahBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ubahBtnActionPerformed
-        int row = jTable2.getSelectedRow();
-        if (row >= 0) {
-            try {
-                int id = (int) jTable2.getValueAt(row, 0);
-                String sql = "UPDATE penyewaan SET id_pelanggan=?, id_pc=?, tanggal_sewa=?, tanggal_kembali=?, total_biaya=? WHERE id_penyewaan=?";
-                PreparedStatement ps = conn.prepareStatement(sql);
-                
-                ComboItem selectedPelanggan = (ComboItem) pelanggan.getSelectedItem();
-                ComboItem selectedPC = (ComboItem) komputer.getSelectedItem();
-                
-                ps.setInt(1, selectedPelanggan.getId());
-                ps.setInt(2, selectedPC.getId());
-                ps.setDate(3, new java.sql.Date(tglSewa.getDate().getTime()));
-                ps.setDate(4, new java.sql.Date(tglKemabali.getDate().getTime()));
-                ps.setDouble(5, Double.parseDouble(totalBiaya.getText()));
-                ps.setInt(6, id);
-                
-                ps.executeUpdate();
-                loadData();
-                clearForm();
-            } catch (SQLException e) {
-                System.out.println("Error updating data: " + e.getMessage());
-            }
-        }
-    }//GEN-LAST:event_ubahBtnActionPerformed
+private void tambahBtnActionPerformed(java.awt.event.ActionEvent evt) {
+    // Validate selections
+    if (pelanggan.getSelectedItem() == null || komputer.getSelectedItem() == null) {
+        ValidationUtils.showError(this, "Pilih pelanggan dan komputer!");
+        return;
+    }
 
-    private void hapusBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_hapusBtnActionPerformed
-        int row = jTable2.getSelectedRow();
-        if (row >= 0) {
-            try {
-                int id = (int) jTable2.getValueAt(row, 0);
-                String sql = "DELETE FROM penyewaan WHERE id_penyewaan=?";
-                PreparedStatement ps = conn.prepareStatement(sql);
-                ps.setInt(1, id);
-                ps.executeUpdate();
-                loadData();
-                clearForm();
-            } catch (SQLException e) {
-                System.out.println("Error deleting data: " + e.getMessage());
-            }
-        }
-    }//GEN-LAST:event_hapusBtnActionPerformed
+    // Validate dates
+    if (tglSewa.getDate() == null || tglKemabali.getDate() == null) {
+        ValidationUtils.showError(this, "Tanggal sewa dan tanggal kembali harus diisi!");
+        return;
+    }
 
-    private void tambahBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_tambahBtnActionPerformed
+    if (!ValidationUtils.isValidDate(tglSewa.getDate(), tglKemabali.getDate())) {
+        ValidationUtils.showError(this, "Tanggal kembali harus setelah tanggal sewa!");
+        return;
+    }
+
+    // Validate total biaya
+    if (ValidationUtils.isEmptyField(totalBiaya) || !ValidationUtils.isValidNumber(totalBiaya.getText())) {
+        ValidationUtils.showError(this, "Total biaya harus berupa angka!");
+        return;
+    }
+
     try {
         // Validate form data
         if (pelanggan.getSelectedItem() == null || 
@@ -368,17 +347,106 @@ public class Penyewaan extends javax.swing.JFrame {
         ps.executeUpdate();
         loadData();
         clearForm();
+        setButtonStates(true, false, false);
         javax.swing.JOptionPane.showMessageDialog(this, 
             "Data berhasil ditambahkan", 
             "Sukses", 
             javax.swing.JOptionPane.INFORMATION_MESSAGE);
+        ValidationUtils.showSuccess(this, "Data penyewaan berhasil ditambahkan");
     } catch (SQLException e) {
-        javax.swing.JOptionPane.showMessageDialog(this, 
-            "Error: " + e.getMessage(), 
-            "Database Error", 
-            javax.swing.JOptionPane.ERROR_MESSAGE);
+        ValidationUtils.showError(this, "Error: " + e.getMessage());
     }
 }//GEN-LAST:event_tambahBtnActionPerformed
+
+private void ubahBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ubahBtnActionPerformed
+    int row = jTable2.getSelectedRow();
+    if (row < 0) {
+        ValidationUtils.showError(this, "Pilih data yang akan diubah!");
+        return;
+    }
+
+    // Validate selections
+    if (pelanggan.getSelectedItem() == null || komputer.getSelectedItem() == null) {
+        ValidationUtils.showError(this, "Pilih pelanggan dan komputer!");
+        return;
+    }
+
+    // Validate dates
+    if (tglSewa.getDate() == null || tglKemabali.getDate() == null) {
+        ValidationUtils.showError(this, "Tanggal sewa dan tanggal kembali harus diisi!");
+        return;
+    }
+
+    if (!ValidationUtils.isValidDate(tglSewa.getDate(), tglKemabali.getDate())) {
+        ValidationUtils.showError(this, "Tanggal kembali harus setelah tanggal sewa!");
+        return;
+    }
+
+    // Validate total biaya
+    if (ValidationUtils.isEmptyField(totalBiaya) || !ValidationUtils.isValidNumber(totalBiaya.getText())) {
+        ValidationUtils.showError(this, "Total biaya harus berupa angka!");
+        return;
+    }
+
+    try {
+        if (row >= 0) {
+            int id = (int) jTable2.getValueAt(row, 0);
+            String sql = "UPDATE penyewaan SET id_pelanggan=?, id_pc=?, tanggal_sewa=?, tanggal_kembali=?, total_biaya=? WHERE id_penyewaan=?";
+            PreparedStatement ps = conn.prepareStatement(sql);
+            
+            ComboItem selectedPelanggan = (ComboItem) pelanggan.getSelectedItem();
+            ComboItem selectedPC = (ComboItem) komputer.getSelectedItem();
+            
+            ps.setInt(1, selectedPelanggan.getId());
+            ps.setInt(2, selectedPC.getId());
+            ps.setDate(3, new java.sql.Date(tglSewa.getDate().getTime()));
+            ps.setDate(4, new java.sql.Date(tglKemabali.getDate().getTime()));
+            ps.setDouble(5, Double.parseDouble(totalBiaya.getText()));
+            ps.setInt(6, id);
+            
+            ps.executeUpdate();
+            loadData();
+            clearForm();
+            setButtonStates(true, false, false);
+        }
+        ValidationUtils.showSuccess(this, "Data penyewaan berhasil diubah");
+    } catch (SQLException e) {
+        ValidationUtils.showError(this, "Error: " + e.getMessage());
+    }
+}//GEN-LAST:event_ubahBtnActionPerformed
+
+private void hapusBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_hapusBtnActionPerformed
+    int row = jTable2.getSelectedRow();
+    if (row < 0) {
+        ValidationUtils.showError(this, "Pilih data yang akan dihapus!");
+        return;
+    }
+
+    int confirm = javax.swing.JOptionPane.showConfirmDialog(
+        this,
+        "Apakah Anda yakin ingin menghapus data ini?",
+        "Konfirmasi Hapus",
+        javax.swing.JOptionPane.YES_NO_OPTION
+    );
+    
+    if (confirm == javax.swing.JOptionPane.YES_OPTION) {
+        if (row >= 0) {
+            try {
+                int id = (int) jTable2.getValueAt(row, 0);
+                String sql = "DELETE FROM penyewaan WHERE id_penyewaan=?";
+                PreparedStatement ps = conn.prepareStatement(sql);
+                ps.setInt(1, id);
+                ps.executeUpdate();
+                loadData();
+                clearForm();
+                setButtonStates(true, false, false);
+                ValidationUtils.showSuccess(this, "Data penyewaan berhasil dihapus");
+            } catch (SQLException e) {
+                ValidationUtils.showError(this, "Error: " + e.getMessage());
+            }
+        }
+    }
+}//GEN-LAST:event_hapusBtnActionPerformed
 
     private void cariBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cariBtnActionPerformed
         String keyword = cariField.getText();
@@ -413,9 +481,19 @@ public class Penyewaan extends javax.swing.JFrame {
         // TODO add your handling code here:
     }//GEN-LAST:event_cetakBtnActionPerformed
 
-    private void jTable2MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTable2MouseClicked
+private void jTable2MouseClicked(java.awt.event.MouseEvent evt) {
     int row = jTable2.getSelectedRow();
     if (row >= 0) {
+        int currentRow = jTable2.getSelectedRow();
+        // If clicking the same row twice, clear the form
+        if (currentRow == lastSelectedRow) {
+            clearForm();
+            lastSelectedRow = -1; // Reset last selected row
+            return;
+        }
+        lastSelectedRow = currentRow; // Update last selected row
+        
+        setButtonStates(false, true, true);
         try {
             int id = (int) jTable2.getValueAt(row, 0);
             String sql = "SELECT * FROM penyewaan WHERE id_penyewaan=?";
@@ -442,7 +520,6 @@ public class Penyewaan extends javax.swing.JFrame {
                     }
                 }
                 
-                // Set dates
                 tglSewa.setDate(rs.getDate("tanggal_sewa"));
                 tglKemabali.setDate(rs.getDate("tanggal_kembali"));
                 totalBiaya.setText(String.valueOf(rs.getDouble("total_biaya")));
@@ -451,7 +528,10 @@ public class Penyewaan extends javax.swing.JFrame {
             System.out.println("Error loading selection: " + e.getMessage());
         }
     }
-}//GEN-LAST:event_jTable2MouseClicked
+}
+
+// Add this field to the class
+private int lastSelectedRow = -1;
 
     /**
      * @param args the command line arguments
@@ -550,6 +630,13 @@ public class Penyewaan extends javax.swing.JFrame {
         tglSewa.setDate(null);
         tglKemabali.setDate(null);
         totalBiaya.setText("");
+        setButtonStates(true, false, false);
+    }
+
+    private void setButtonStates(boolean tambahEnabled, boolean ubahEnabled, boolean hapusEnabled) {
+        tambahBtn.setEnabled(tambahEnabled);
+        ubahBtn.setEnabled(ubahEnabled);
+        hapusBtn.setEnabled(hapusEnabled);
     }
 
     private class ComboItem {

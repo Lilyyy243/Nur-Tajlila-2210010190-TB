@@ -7,11 +7,13 @@ package view;
 import database.Koneksi;
 import java.sql.*;
 import javax.swing.table.DefaultTableModel;
+import utils.*;
 
 public class Pelanggan extends javax.swing.JFrame {
 
     private Connection conn;
     private DefaultTableModel tableModel;
+    private int lastSelectedRow = -1;
 
     /**
      * Creates new form Pelanggan
@@ -23,6 +25,7 @@ public class Pelanggan extends javax.swing.JFrame {
         conn = Koneksi.getConnection();
         setupTable();
         loadData();
+        setButtonStates(true, false, false);
         
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         addWindowListener(new java.awt.event.WindowAdapter() {
@@ -34,9 +37,13 @@ public class Pelanggan extends javax.swing.JFrame {
     }
 
     private void setupTable() {
-        String[] columns = {"Nama", "Telepon", "Alamat"};
+        String[] columns = {"ID", "Nama", "Telepon", "Alamat"};
         tableModel = new DefaultTableModel(columns, 0);
         jTable2.setModel(tableModel);
+        // Hide ID column
+        jTable2.getColumnModel().getColumn(0).setMinWidth(0);
+        jTable2.getColumnModel().getColumn(0).setMaxWidth(0);
+        jTable2.getColumnModel().getColumn(0).setWidth(0);
     }
 
     private void loadData() {
@@ -45,19 +52,23 @@ public class Pelanggan extends javax.swing.JFrame {
             Statement st = conn.createStatement();
             ResultSet rs = st.executeQuery("SELECT * FROM pelanggan");
             while (rs.next()) {
-                int id = rs.getInt("id_pelanggan"); // Store ID but don't display it
                 Object[] row = {
+                    rs.getInt("id_pelanggan"),
                     rs.getString("nama"),
                     rs.getString("telepon"),
                     rs.getString("alamat")
                 };
                 tableModel.addRow(row);
-                // Store ID in table's row properties for later use
-                jTable2.setValueAt(id, tableModel.getRowCount() - 1, 0);
             }
         } catch (SQLException e) {
             System.out.println("Error loading data: " + e.getMessage());
         }
+    }
+
+    private void setButtonStates(boolean tambahEnabled, boolean ubahEnabled, boolean hapusEnabled) {
+        tambahBtn.setEnabled(tambahEnabled);
+        ubahBtn.setEnabled(ubahEnabled);
+        hapusBtn.setEnabled(hapusEnabled);
     }
 
     /**
@@ -278,27 +289,56 @@ public class Pelanggan extends javax.swing.JFrame {
 
     private void ubahBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ubahBtnActionPerformed
         int row = jTable2.getSelectedRow();
-        if (row >= 0) {
-            try {
-                int id = (int) jTable2.getValueAt(row, 0);
-                String sql = "UPDATE pelanggan SET nama=?, telepon=?, alamat=? WHERE id_pelanggan=?";
-                PreparedStatement ps = conn.prepareStatement(sql);
-                ps.setString(1, nama.getText());
-                ps.setString(2, telp.getText());
-                ps.setString(3, jTextArea1.getText());
-                ps.setInt(4, id);
-                ps.executeUpdate();
-                loadData();
-                clearForm();
-            } catch (SQLException e) {
-                System.out.println("Error updating data: " + e.getMessage());
-            }
+        if (row < 0) {
+            ValidationUtils.showError(this, "Pilih data yang akan diubah!");
+            return;
+        }
+
+        if (ValidationUtils.isEmptyField(nama) || 
+            ValidationUtils.isEmptyField(telp) || 
+            ValidationUtils.isEmptyField(jTextArea1)) {
+            ValidationUtils.showError(this, "Semua field harus diisi!");
+            return;
+        }
+
+        if (!ValidationUtils.isValidPhone(telp.getText().trim())) {
+            ValidationUtils.showError(this, "Format nomor telepon tidak valid!\nGunakan 10-13 digit angka.");
+            return;
+        }
+
+        try {
+            int id = (int) jTable2.getValueAt(row, 0);
+            String sql = "UPDATE pelanggan SET nama=?, telepon=?, alamat=? WHERE id_pelanggan=?";
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setString(1, nama.getText());
+            ps.setString(2, telp.getText());
+            ps.setString(3, jTextArea1.getText());
+            ps.setInt(4, id);
+            ps.executeUpdate();
+            loadData();
+            clearForm();
+            setButtonStates(true, false, false);
+            ValidationUtils.showSuccess(this, "Data pelanggan berhasil diubah");
+        } catch (SQLException e) {
+            ValidationUtils.showError(this, "Error: " + e.getMessage());
         }
     }//GEN-LAST:event_ubahBtnActionPerformed
 
     private void hapusBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_hapusBtnActionPerformed
         int row = jTable2.getSelectedRow();
-        if (row >= 0) {
+        if (row < 0) {
+            ValidationUtils.showError(this, "Pilih data yang akan dihapus!");
+            return;
+        }
+
+        int confirm = javax.swing.JOptionPane.showConfirmDialog(
+            this,
+            "Apakah Anda yakin ingin menghapus data ini?",
+            "Konfirmasi Hapus",
+            javax.swing.JOptionPane.YES_NO_OPTION
+        );
+        
+        if (confirm == javax.swing.JOptionPane.YES_OPTION) {
             try {
                 int id = (int) jTable2.getValueAt(row, 0);
                 String sql = "DELETE FROM pelanggan WHERE id_pelanggan=?";
@@ -307,13 +347,28 @@ public class Pelanggan extends javax.swing.JFrame {
                 ps.executeUpdate();
                 loadData();
                 clearForm();
+                setButtonStates(true, false, false);
+                ValidationUtils.showSuccess(this, "Data pelanggan berhasil dihapus");
             } catch (SQLException e) {
-                System.out.println("Error deleting data: " + e.getMessage());
+                ValidationUtils.showError(this, "Error: " + e.getMessage());
             }
         }
     }//GEN-LAST:event_hapusBtnActionPerformed
 
     private void tambahBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_tambahBtnActionPerformed
+        // Validate inputs
+        if (ValidationUtils.isEmptyField(nama) || 
+            ValidationUtils.isEmptyField(telp) || 
+            ValidationUtils.isEmptyField(jTextArea1)) {
+            ValidationUtils.showError(this, "Semua field harus diisi!");
+            return;
+        }
+
+        if (!ValidationUtils.isValidPhone(telp.getText().trim())) {
+            ValidationUtils.showError(this, "Format nomor telepon tidak valid!\nGunakan 10-13 digit angka.");
+            return;
+        }
+
         try {
             String sql = "INSERT INTO pelanggan (nama, telepon, alamat) VALUES (?, ?, ?)";
             PreparedStatement ps = conn.prepareStatement(sql);
@@ -323,8 +378,10 @@ public class Pelanggan extends javax.swing.JFrame {
             ps.executeUpdate();
             loadData();
             clearForm();
+            setButtonStates(true, false, false);
+            ValidationUtils.showSuccess(this, "Data pelanggan berhasil ditambahkan");
         } catch (SQLException e) {
-            System.out.println("Error inserting data: " + e.getMessage());
+            ValidationUtils.showError(this, "Error: " + e.getMessage());
         }
     }//GEN-LAST:event_tambahBtnActionPerformed
 
@@ -360,6 +417,16 @@ public class Pelanggan extends javax.swing.JFrame {
     private void jTable2MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTable2MouseClicked
         int row = jTable2.getSelectedRow();
         if (row >= 0) {
+            int currentRow = jTable2.getSelectedRow();
+            // If clicking the same row twice, clear the form
+            if (currentRow == lastSelectedRow) {
+                clearForm();
+                lastSelectedRow = -1; // Reset last selected row
+                return;
+            }
+            lastSelectedRow = currentRow; // Update last selected row
+            
+            setButtonStates(false, true, true);
             nama.setText(jTable2.getValueAt(row, 1).toString());
             telp.setText(jTable2.getValueAt(row, 2).toString());
             jTextArea1.setText(jTable2.getValueAt(row, 3).toString());
@@ -370,6 +437,7 @@ public class Pelanggan extends javax.swing.JFrame {
         nama.setText("");
         telp.setText("");
         jTextArea1.setText("");
+        setButtonStates(true, false, false);
     }
 
     /**
