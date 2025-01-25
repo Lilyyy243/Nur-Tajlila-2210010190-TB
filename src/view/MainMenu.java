@@ -4,17 +4,41 @@
  */
 package view;
 
-/**
- *
- * @author Saputra
- */
+
 public class MainMenu extends javax.swing.JFrame {
 
     /**
-     * Creates new form MainMenu
+     * Creates new form MainMenu 
      */
     public MainMenu() {
         initComponents();
+        setLocationRelativeTo(null); 
+        
+        
+        // Window closing validation is already correctly implemented here
+        this.addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosing(java.awt.event.WindowEvent e) {
+                int confirm = javax.swing.JOptionPane.showConfirmDialog(
+                    null,
+                    "Apakah anda yakin ingin keluar?",
+                    "Konfirmasi Keluar",
+                    javax.swing.JOptionPane.YES_NO_OPTION
+                );
+                
+                if (confirm == javax.swing.JOptionPane.YES_OPTION) {
+                    javax.swing.JOptionPane.showMessageDialog(
+                        null,
+                        "Terima kasih telah menggunakan aplikasi Penyewaan PC",
+                        "Terima Kasih",
+                        javax.swing.JOptionPane.INFORMATION_MESSAGE
+                    );
+                    System.exit(0);
+                }
+            }
+        });
+        
+        setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
     }
 
     /**
@@ -26,11 +50,103 @@ public class MainMenu extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        getContentPane().setLayout(new java.awt.GridLayout(0, 1));
+        komputerBtn = new javax.swing.JButton();
+        penyewaanBtn = new javax.swing.JButton();
+        PelangganBtn = new javax.swing.JButton();
+        jLabel1 = new javax.swing.JLabel();
+        jLabel2 = new javax.swing.JLabel();
+
+        setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
+        setBackground(new java.awt.Color(255, 204, 204));
+        setResizable(false);
+
+        komputerBtn.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
+        komputerBtn.setText("Komputer");
+        komputerBtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                komputerBtnActionPerformed(evt);
+            }
+        });
+
+        penyewaanBtn.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
+        penyewaanBtn.setText("Penyewaan");
+        penyewaanBtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                penyewaanBtnActionPerformed(evt);
+            }
+        });
+
+        PelangganBtn.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
+        PelangganBtn.setText("Pelanggan");
+        PelangganBtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                PelangganBtnActionPerformed(evt);
+            }
+        });
+
+        jLabel1.setFont(new java.awt.Font("Segoe UI", 3, 24)); // NOI18N
+        jLabel1.setText("Selamat Datang di Aplikasi Penyewaan PC");
+
+        jLabel2.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
+        jLabel2.setText("Silahkan Pilih Menu Dibawah Ini:");
+
+        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
+        getContentPane().setLayout(layout);
+        layout.setHorizontalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jLabel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGap(356, 356, 356))
+            .addGroup(layout.createSequentialGroup()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addGroup(layout.createSequentialGroup()
+                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jLabel2))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(135, 135, 135)
+                        .addComponent(komputerBtn, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                .addGap(32, 32, 32)
+                .addComponent(penyewaanBtn, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGap(27, 27, 27)
+                .addComponent(PelangganBtn, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGap(128, 128, 128))
+        );
+        layout.setVerticalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jLabel1)
+                .addGap(176, 176, 176)
+                .addComponent(jLabel2)
+                .addGap(39, 39, 39)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(penyewaanBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 71, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(komputerBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 71, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(PelangganBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 71, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(135, Short.MAX_VALUE))
+        );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+
+    private void komputerBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_komputerBtnActionPerformed
+        Komputer komputer = new Komputer();
+        komputer.setVisible(true);
+        this.dispose();
+    }//GEN-LAST:event_komputerBtnActionPerformed
+
+    private void penyewaanBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_penyewaanBtnActionPerformed
+        Penyewaan penyewaan = new Penyewaan();
+        penyewaan.setVisible(true);
+        this.dispose();
+    }//GEN-LAST:event_penyewaanBtnActionPerformed
+
+    private void PelangganBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_PelangganBtnActionPerformed
+        Pelanggan pelanggan = new Pelanggan();
+        pelanggan.setVisible(true);
+        this.dispose();
+    }//GEN-LAST:event_PelangganBtnActionPerformed
 
     /**
      * @param args the command line arguments
@@ -68,5 +184,10 @@ public class MainMenu extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton PelangganBtn;
+    private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
+    private javax.swing.JButton komputerBtn;
+    private javax.swing.JButton penyewaanBtn;
     // End of variables declaration//GEN-END:variables
 }

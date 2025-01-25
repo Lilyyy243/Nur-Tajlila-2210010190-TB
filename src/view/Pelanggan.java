@@ -4,17 +4,60 @@
  */
 package view;
 
-/**
- *
- * @author Saputra
- */
+import database.Koneksi;
+import java.sql.*;
+import javax.swing.table.DefaultTableModel;
+
 public class Pelanggan extends javax.swing.JFrame {
+
+    private Connection conn;
+    private DefaultTableModel tableModel;
 
     /**
      * Creates new form Pelanggan
      */
     public Pelanggan() {
         initComponents();
+        setLocationRelativeTo(null);
+        
+        conn = Koneksi.getConnection();
+        setupTable();
+        loadData();
+        
+        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosed(java.awt.event.WindowEvent e) {
+                new MainMenu().setVisible(true);
+            }
+        });
+    }
+
+    private void setupTable() {
+        String[] columns = {"Nama", "Telepon", "Alamat"};
+        tableModel = new DefaultTableModel(columns, 0);
+        jTable2.setModel(tableModel);
+    }
+
+    private void loadData() {
+        tableModel.setRowCount(0);
+        try {
+            Statement st = conn.createStatement();
+            ResultSet rs = st.executeQuery("SELECT * FROM pelanggan");
+            while (rs.next()) {
+                int id = rs.getInt("id_pelanggan"); // Store ID but don't display it
+                Object[] row = {
+                    rs.getString("nama"),
+                    rs.getString("telepon"),
+                    rs.getString("alamat")
+                };
+                tableModel.addRow(row);
+                // Store ID in table's row properties for later use
+                jTable2.setValueAt(id, tableModel.getRowCount() - 1, 0);
+            }
+        } catch (SQLException e) {
+            System.out.println("Error loading data: " + e.getMessage());
+        }
     }
 
     /**
@@ -25,22 +68,309 @@ public class Pelanggan extends javax.swing.JFrame {
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
+        java.awt.GridBagConstraints gridBagConstraints;
+
+        input = new javax.swing.JPanel();
+        jLabel7 = new javax.swing.JLabel();
+        jLabel8 = new javax.swing.JLabel();
+        jLabel9 = new javax.swing.JLabel();
+        ubahBtn = new javax.swing.JButton();
+        hapusBtn = new javax.swing.JButton();
+        tambahBtn = new javax.swing.JButton();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        jTextArea1 = new javax.swing.JTextArea();
+        nama = new javax.swing.JTextField();
+        telp = new javax.swing.JTextField();
+        Table = new javax.swing.JPanel();
+        jLabel11 = new javax.swing.JLabel();
+        cariField = new javax.swing.JTextField();
+        cariBtn = new javax.swing.JButton();
+        cetakBtn = new javax.swing.JButton();
+        jScrollPane4 = new javax.swing.JScrollPane();
+        jTable2 = new javax.swing.JTable();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        getContentPane().setLayout(new java.awt.GridLayout(0, 1));
 
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
-        getContentPane().setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 400, Short.MAX_VALUE)
-        );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 300, Short.MAX_VALUE)
-        );
+        input.setBorder(javax.swing.BorderFactory.createTitledBorder(""));
+        java.awt.GridBagLayout inputLayout = new java.awt.GridBagLayout();
+        inputLayout.columnWidths = new int[] {0, 15, 0, 15, 0};
+        inputLayout.rowHeights = new int[] {0, 11, 0, 11, 0, 11, 0};
+        input.setLayout(inputLayout);
+
+        jLabel7.setText("Nama :");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.FIRST_LINE_END;
+        input.add(jLabel7, gridBagConstraints);
+
+        jLabel8.setText("No Telepon :");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 2;
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.FIRST_LINE_END;
+        input.add(jLabel8, gridBagConstraints);
+
+        jLabel9.setText("Alamat :");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 4;
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.FIRST_LINE_END;
+        input.add(jLabel9, gridBagConstraints);
+
+        ubahBtn.setBackground(new java.awt.Color(102, 102, 102));
+        ubahBtn.setForeground(new java.awt.Color(255, 255, 255));
+        ubahBtn.setText("Ubah");
+        ubahBtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                ubahBtnActionPerformed(evt);
+            }
+        });
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 2;
+        gridBagConstraints.gridy = 6;
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.LINE_END;
+        gridBagConstraints.insets = new java.awt.Insets(20, 0, 0, 0);
+        input.add(ubahBtn, gridBagConstraints);
+
+        hapusBtn.setBackground(new java.awt.Color(204, 0, 0));
+        hapusBtn.setForeground(new java.awt.Color(255, 255, 255));
+        hapusBtn.setText("Hapus");
+        hapusBtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                hapusBtnActionPerformed(evt);
+            }
+        });
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 4;
+        gridBagConstraints.gridy = 6;
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.LINE_END;
+        gridBagConstraints.insets = new java.awt.Insets(20, 0, 0, 0);
+        input.add(hapusBtn, gridBagConstraints);
+
+        tambahBtn.setBackground(new java.awt.Color(0, 153, 51));
+        tambahBtn.setForeground(new java.awt.Color(242, 242, 242));
+        tambahBtn.setText("Tambahkan");
+        tambahBtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                tambahBtnActionPerformed(evt);
+            }
+        });
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 6;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+        gridBagConstraints.insets = new java.awt.Insets(20, 0, 0, 0);
+        input.add(tambahBtn, gridBagConstraints);
+
+        jTextArea1.setColumns(20);
+        jTextArea1.setRows(5);
+        jScrollPane1.setViewportView(jTextArea1);
+
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 2;
+        gridBagConstraints.gridy = 4;
+        gridBagConstraints.gridwidth = 3;
+        input.add(jScrollPane1, gridBagConstraints);
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 2;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.gridwidth = 3;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+        input.add(nama, gridBagConstraints);
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 2;
+        gridBagConstraints.gridy = 2;
+        gridBagConstraints.gridwidth = 3;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+        input.add(telp, gridBagConstraints);
+
+        getContentPane().add(input);
+
+        Table.setBorder(javax.swing.BorderFactory.createTitledBorder(""));
+        Table.setLayout(new java.awt.GridBagLayout());
+
+        jLabel11.setText("Cari PC");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.LINE_START;
+        gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
+        Table.add(jLabel11, gridBagConstraints);
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 1;
+        gridBagConstraints.gridwidth = 4;
+        gridBagConstraints.ipadx = 240;
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.LINE_START;
+        gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
+        Table.add(cariField, gridBagConstraints);
+
+        cariBtn.setText("Cari");
+        cariBtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cariBtnActionPerformed(evt);
+            }
+        });
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 4;
+        gridBagConstraints.gridy = 1;
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.LINE_END;
+        gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
+        Table.add(cariBtn, gridBagConstraints);
+
+        cetakBtn.setText("Cetak");
+        cetakBtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cetakBtnActionPerformed(evt);
+            }
+        });
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 6;
+        gridBagConstraints.ipadx = 50;
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.LAST_LINE_END;
+        gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
+        Table.add(cetakBtn, gridBagConstraints);
+
+        jScrollPane4.setPreferredSize(new java.awt.Dimension(400, 200));
+
+        jTable2.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+                {null, null, null},
+                {null, null, null},
+                {null, null, null},
+                {null, null, null},
+                {null, null, null},
+                {null, null, null},
+                {null, null, null},
+                {null, null, null},
+                {null, null, null},
+                {null, null, null}
+            },
+            new String [] {
+                "Title 1", "Title 2", "Title 3"
+            }
+        ));
+        jTable2.setPreferredSize(new java.awt.Dimension(60, 500));
+        jTable2.setShowGrid(true);
+        jTable2.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                jTable2MouseClicked(evt);
+            }
+        });
+        jScrollPane4.setViewportView(jTable2);
+
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 2;
+        gridBagConstraints.gridwidth = 4;
+        gridBagConstraints.gridheight = 4;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
+        Table.add(jScrollPane4, gridBagConstraints);
+
+        getContentPane().add(Table);
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+
+    private void ubahBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ubahBtnActionPerformed
+        int row = jTable2.getSelectedRow();
+        if (row >= 0) {
+            try {
+                int id = (int) jTable2.getValueAt(row, 0);
+                String sql = "UPDATE pelanggan SET nama=?, telepon=?, alamat=? WHERE id_pelanggan=?";
+                PreparedStatement ps = conn.prepareStatement(sql);
+                ps.setString(1, nama.getText());
+                ps.setString(2, telp.getText());
+                ps.setString(3, jTextArea1.getText());
+                ps.setInt(4, id);
+                ps.executeUpdate();
+                loadData();
+                clearForm();
+            } catch (SQLException e) {
+                System.out.println("Error updating data: " + e.getMessage());
+            }
+        }
+    }//GEN-LAST:event_ubahBtnActionPerformed
+
+    private void hapusBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_hapusBtnActionPerformed
+        int row = jTable2.getSelectedRow();
+        if (row >= 0) {
+            try {
+                int id = (int) jTable2.getValueAt(row, 0);
+                String sql = "DELETE FROM pelanggan WHERE id_pelanggan=?";
+                PreparedStatement ps = conn.prepareStatement(sql);
+                ps.setInt(1, id);
+                ps.executeUpdate();
+                loadData();
+                clearForm();
+            } catch (SQLException e) {
+                System.out.println("Error deleting data: " + e.getMessage());
+            }
+        }
+    }//GEN-LAST:event_hapusBtnActionPerformed
+
+    private void tambahBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_tambahBtnActionPerformed
+        try {
+            String sql = "INSERT INTO pelanggan (nama, telepon, alamat) VALUES (?, ?, ?)";
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setString(1, nama.getText());
+            ps.setString(2, telp.getText());
+            ps.setString(3, jTextArea1.getText());
+            ps.executeUpdate();
+            loadData();
+            clearForm();
+        } catch (SQLException e) {
+            System.out.println("Error inserting data: " + e.getMessage());
+        }
+    }//GEN-LAST:event_tambahBtnActionPerformed
+
+    private void cariBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cariBtnActionPerformed
+        String keyword = cariField.getText();
+        tableModel.setRowCount(0);
+        try {
+            String sql = "SELECT * FROM pelanggan WHERE nama LIKE ? OR telepon LIKE ? OR alamat LIKE ?";
+            PreparedStatement ps = conn.prepareStatement(sql);
+            String pattern = "%" + keyword + "%";
+            ps.setString(1, pattern);
+            ps.setString(2, pattern);
+            ps.setString(3, pattern);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                Object[] row = {
+                    rs.getInt("id_pelanggan"),
+                    rs.getString("nama"),
+                    rs.getString("telepon"),
+                    rs.getString("alamat")
+                };
+                tableModel.addRow(row);
+            }
+        } catch (SQLException e) {
+            System.out.println("Error searching data: " + e.getMessage());
+        }
+    }//GEN-LAST:event_cariBtnActionPerformed
+
+    private void cetakBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cetakBtnActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_cetakBtnActionPerformed
+
+    private void jTable2MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTable2MouseClicked
+        int row = jTable2.getSelectedRow();
+        if (row >= 0) {
+            nama.setText(jTable2.getValueAt(row, 1).toString());
+            telp.setText(jTable2.getValueAt(row, 2).toString());
+            jTextArea1.setText(jTable2.getValueAt(row, 3).toString());
+        }
+    }//GEN-LAST:event_jTable2MouseClicked
+
+    private void clearForm() {
+        nama.setText("");
+        telp.setText("");
+        jTextArea1.setText("");
+    }
 
     /**
      * @param args the command line arguments
@@ -78,5 +408,23 @@ public class Pelanggan extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JPanel Table;
+    private javax.swing.JButton cariBtn;
+    private javax.swing.JTextField cariField;
+    private javax.swing.JButton cetakBtn;
+    private javax.swing.JButton hapusBtn;
+    private javax.swing.JPanel input;
+    private javax.swing.JLabel jLabel11;
+    private javax.swing.JLabel jLabel7;
+    private javax.swing.JLabel jLabel8;
+    private javax.swing.JLabel jLabel9;
+    private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JScrollPane jScrollPane4;
+    private javax.swing.JTable jTable2;
+    private javax.swing.JTextArea jTextArea1;
+    private javax.swing.JTextField nama;
+    private javax.swing.JButton tambahBtn;
+    private javax.swing.JTextField telp;
+    private javax.swing.JButton ubahBtn;
     // End of variables declaration//GEN-END:variables
 }
